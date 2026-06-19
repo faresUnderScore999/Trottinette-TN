@@ -656,6 +656,18 @@ app.get('/api/search', async (req, res) => {
     res.status(500).json({ error: 'Search failed' })
   }
 })
+// 👇 Static file serving (AFTER all API routes)
+const publicDir = path.join(__dirname, 'public')
+if (process.env.NODE_ENV === 'production' && require('fs').existsSync(publicDir)) {
+  app.use(express.static(publicDir))
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(publicDir, 'index.html'))
+  })
+}
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`)
+})
 app.listen(PORT, () => {
   console.log(`Trottinette Tunisie Ecommerce Server running on port ${PORT}`)
 })
