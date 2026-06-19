@@ -339,6 +339,7 @@ const addToCart = async (productId) => {
   try {
     await cartStore.addToCart(productId, 1)
     alert('Product added to cart!')
+    router.push('/cart')
   } catch {
     alert('Please login to add items to cart')
   }

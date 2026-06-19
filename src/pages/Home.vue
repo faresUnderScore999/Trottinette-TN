@@ -41,7 +41,7 @@
       </div>
     </div>
 
-    <!-- Featured Categories -->
+    <!-- Featured Categories 
     <div>
       <div class="mb-8 flex items-end justify-between">
         <div>
@@ -76,7 +76,7 @@
         </router-link>
       </div>
     </div>
-
+-->
     <!-- Featured Products -->
     <div>
       <div class="mb-8 flex items-end justify-between">
@@ -232,6 +232,7 @@ const addToCart = async (productId) => {
   try {
     await cartStore.addToCart(productId, 1)
     alert('Product added to cart!')
+    router.push('/cart')
   } catch {
     alert('Please login to add items to cart')
   }

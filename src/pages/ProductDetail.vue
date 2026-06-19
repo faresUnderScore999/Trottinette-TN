@@ -265,6 +265,7 @@ const addToCart = async () => {
   try {
     await cartStore.addToCart(product.value.id, quantity.value)
     alert('Product added to cart!')
+    router.push('/cart')
   } catch {
     alert('Please login to add items to cart')
     router.push('/login')
