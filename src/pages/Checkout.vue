@@ -249,9 +249,9 @@ const submitOrder = async () => {
   isLoading.value = true
 
   try {
-    const order = await orderStore.createOrder(shippingData.value)
+    await orderStore.createOrder(shippingData.value)
     cartStore.clearCart()
-    router.push(`/order-confirmation/${order.id}`)
+    router.push(`/orders`)
   } catch {
     error.value = orderStore.error || 'Failed to place order'
   } finally {
