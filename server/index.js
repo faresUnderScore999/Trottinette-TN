@@ -527,7 +527,29 @@ app.post('/api/orders', authMiddleware, async (req, res) => {
 app.get('/api/orders', authMiddleware, async (req, res) => {
   try {
     const { rows } = await db.query(
-      'SELECT * FROM orders WHERE user_id = $1 ORDER BY created_at DESC',
+      `SELECT o.*,
+              COALESCE(
+                (
+                  SELECT json_agg(
+                    json_build_object(
+                      'id', oi.id,
+                      'product_id', oi.product_id,
+                      'quantity', oi.quantity,
+                      'price', oi.price,
+                      'name', p.name,
+                      'slug', p.slug,
+                      'image_url', p.image_url
+                    )
+                  )
+                  FROM order_items oi
+                  JOIN products p ON oi.product_id = p.id
+                  WHERE oi.order_id = o.id
+                ),
+                '[]'::json
+              ) AS items
+       FROM orders o
+       WHERE o.user_id = $1
+       ORDER BY o.created_at DESC`,
       [req.userId],
     )
 

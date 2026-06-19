@@ -43,12 +43,28 @@
         </div>
 
         <div class="flex items-center gap-1">
+          <!-- Contact Link -->
+          <router-link
+            to="/contact"
+            class="rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 hover:text-slate-900 hidden sm:inline-flex items-center gap-1.5"
+          >
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+              />
+            </svg>
+            Contact
+          </router-link>
+
           <!-- Categories dropdown -->
           <div class="relative group hidden sm:block">
             <button
               class="rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 hover:text-slate-900"
             >
-              Categories
+              &#128722; Categories
             </button>
             <div
               class="absolute right-0 mt-1 w-48 rounded-xl border border-slate-100 bg-white py-2 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200"
@@ -183,6 +199,11 @@
               <li>
                 <router-link to="/cart" class="text-slate-400 transition hover:text-white"
                   >Cart</router-link
+                >
+              </li>
+              <li>
+                <router-link to="/contact" class="text-slate-400 transition hover:text-white"
+                  >Contact</router-link
                 >
               </li>
             </ul>

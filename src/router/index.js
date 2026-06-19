@@ -5,6 +5,9 @@ import ProductDetail from '../pages/ProductDetail.vue'
 import Auth from '../pages/Auth.vue'
 import Cart from '../pages/Cart.vue'
 import Checkout from '../pages/Checkout.vue'
+import Orders from '../pages/Orders.vue'
+import Profile from '../pages/Profile.vue'
+import Contact from '../pages/Contact.vue'
 import Admin from '../pages/Admin.vue'
 import AdminProducts from '../pages/AdminProducts.vue'
 import AdminOrders from '../pages/AdminOrders.vue'
@@ -46,6 +49,21 @@ const router = createRouter({
       path: '/checkout',
       name: 'Checkout',
       component: Checkout,
+    },
+    {
+      path: '/orders',
+      name: 'Orders',
+      component: Orders,
+    },
+    {
+      path: '/profile',
+      name: 'Profile',
+      component: Profile,
+    },
+    {
+      path: '/contact',
+      name: 'Contact',
+      component: Contact,
     },
     {
       path: '/admin',
