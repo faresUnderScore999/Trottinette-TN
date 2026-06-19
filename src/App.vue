@@ -1,42 +1,63 @@
 <template>
   <div class="min-h-screen bg-gray-50 flex flex-col">
     <!-- Header/Navigation -->
-    <nav class="bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg sticky top-0 z-50">
+    <nav class="sticky top-0 z-50 border-b border-slate-200 bg-white/80 backdrop-blur-md">
       <div class="container mx-auto px-4 py-4 flex justify-between items-center">
-        <router-link to="/" class="flex items-center space-x-2">
-          <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
-            <path
-              d="M10.5 1.5H5.75A2.25 2.25 0 003.5 3.75v12.5A2.25 2.25 0 005.75 18.5h8.5a2.25 2.25 0 002.25-2.25V8M10.5 1.5v6.5m0-6.5L17 8m-6.5 0L17 1.5"
-              stroke="currentColor"
-              stroke-width="1.5"
-              fill="none"
-            />
-          </svg>
-          <span class="text-xl font-bold hidden sm:inline">Trottinette TN</span>
+        <router-link to="/" class="flex items-center gap-2">
+          <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900 text-white">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 10V3L4 14h7v7l9-11h-7z"
+              />
+            </svg>
+          </div>
+          <span class="text-xl font-bold text-slate-900 hidden sm:inline">Trottinette TN</span>
         </router-link>
 
         <div class="flex-1 mx-4 max-w-md hidden sm:block">
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="Search products..."
-            class="w-full px-4 py-2 rounded text-gray-800 focus:outline-none"
-            @keyup.enter="handleSearch"
-          />
+          <div class="relative">
+            <input
+              v-model="searchQuery"
+              type="text"
+              placeholder="Search products..."
+              class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 pl-10 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              @keyup.enter="handleSearch"
+            />
+            <svg
+              class="absolute left-3 top-2.5 h-4 w-4 text-slate-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          </div>
         </div>
 
-        <div class="flex items-center space-x-4">
+        <div class="flex items-center gap-1">
           <!-- Categories dropdown -->
           <div class="relative group hidden sm:block">
-            <button class="hover:bg-blue-500 px-3 py-2 rounded transition">Categories</button>
+            <button
+              class="rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 hover:text-slate-900"
+            >
+              Categories
+            </button>
             <div
-              class="absolute left-0 mt-0 w-48 bg-white text-gray-800 rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200"
+              class="absolute right-0 mt-1 w-48 rounded-xl border border-slate-100 bg-white py-2 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200"
             >
               <router-link
                 v-for="cat in categories"
                 :key="cat.id"
                 :to="`/products?category=${cat.slug}`"
-                class="block px-4 py-2 hover:bg-gray-100 first:rounded-t last:rounded-b"
+                class="block px-4 py-2 text-sm text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
               >
                 {{ cat.name }}
               </router-link>
@@ -45,48 +66,70 @@
 
           <!-- Auth/Account -->
           <div v-if="authStore.isAuthenticated" class="relative group">
-            <button class="hover:bg-blue-500 px-3 py-2 rounded transition flex items-center">
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" />
+            <button
+              class="rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 hover:text-slate-900 flex items-center gap-2"
+            >
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                />
               </svg>
+              <span class="hidden sm:inline">Account</span>
             </button>
             <div
-              class="absolute right-0 mt-0 w-48 bg-white text-gray-800 rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200"
+              class="absolute right-0 mt-1 w-48 rounded-xl border border-slate-100 bg-white py-2 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200"
             >
-              <router-link to="/profile" class="block px-4 py-2 hover:bg-gray-100"
+              <router-link
+                to="/profile"
+                class="block px-4 py-2 text-sm text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
                 >Profile</router-link
               >
-              <router-link to="/orders" class="block px-4 py-2 hover:bg-gray-100"
+              <router-link
+                to="/orders"
+                class="block px-4 py-2 text-sm text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
                 >Orders</router-link
               >
               <router-link
                 v-if="authStore.isAdmin"
                 to="/admin"
-                class="block px-4 py-2 hover:bg-gray-100 border-t"
-                >Admin Panel</router-link
+                class="block px-4 py-2 text-sm text-slate-600 transition hover:bg-slate-50 hover:text-slate-900 border-t border-slate-100"
               >
-              <button @click="logout" class="w-full text-left px-4 py-2 hover:bg-gray-100 border-t">
+                Admin Panel
+              </router-link>
+              <button
+                @click="logout"
+                class="block w-full text-left px-4 py-2 text-sm text-slate-600 transition hover:bg-slate-50 hover:text-slate-900 border-t border-slate-100"
+              >
                 Logout
               </button>
             </div>
           </div>
-          <router-link v-else to="/login" class="hover:bg-blue-500 px-3 py-2 rounded transition"
+          <router-link
+            v-else
+            to="/login"
+            class="rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 hover:text-slate-900"
             >Login</router-link
           >
 
           <!-- Cart -->
           <router-link
             to="/cart"
-            class="relative hover:bg-blue-500 px-3 py-2 rounded transition flex items-center"
+            class="relative rounded-xl p-2 text-slate-700 transition hover:bg-slate-100 hover:text-slate-900"
           >
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
-                d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 6H6.28l-.31-1.243A1 1 0 005 4H3zM5 16a2 2 0 11-4 0 2 2 0 014 0zm8 0a2 2 0 11-4 0 2 2 0 014 0z"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
               />
             </svg>
             <span
               v-if="cartStore.cartCount > 0"
-              class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center"
+              class="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white"
             >
               {{ cartStore.cartCount }}
             </span>
@@ -101,44 +144,64 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-gray-900 text-white mt-12">
-      <div class="container mx-auto px-4 py-8">
+    <footer class="bg-slate-900 text-white mt-16">
+      <div class="container mx-auto px-4 py-12">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           <div>
-            <h3 class="font-bold text-lg mb-4">About Trottinette TN</h3>
-            <p class="text-gray-400 text-sm">
+            <div class="flex items-center gap-2 mb-4">
+              <div
+                class="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-slate-900"
+              >
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                  />
+                </svg>
+              </div>
+              <h3 class="font-bold text-lg">Trottinette TN</h3>
+            </div>
+            <p class="text-slate-400 text-sm">
               Your premium destination for electric scooters and parts in Tunisia.
             </p>
           </div>
           <div>
-            <h3 class="font-bold text-lg mb-4">Quick Links</h3>
-            <ul class="space-y-2 text-sm">
-              <li><router-link to="/" class="text-gray-400 hover:text-white">Home</router-link></li>
+            <h3 class="font-semibold text-white mb-4">Quick Links</h3>
+            <ul class="space-y-2.5 text-sm">
               <li>
-                <router-link to="/products" class="text-gray-400 hover:text-white"
+                <router-link to="/" class="text-slate-400 transition hover:text-white"
+                  >Home</router-link
+                >
+              </li>
+              <li>
+                <router-link to="/products" class="text-slate-400 transition hover:text-white"
                   >Products</router-link
                 >
               </li>
               <li>
-                <router-link to="/cart" class="text-gray-400 hover:text-white">Cart</router-link>
+                <router-link to="/cart" class="text-slate-400 transition hover:text-white"
+                  >Cart</router-link
+                >
               </li>
             </ul>
           </div>
           <div>
-            <h3 class="font-bold text-lg mb-4">Support</h3>
-            <ul class="space-y-2 text-sm">
-              <li><a href="#" class="text-gray-400 hover:text-white">Contact Us</a></li>
-              <li><a href="#" class="text-gray-400 hover:text-white">FAQ</a></li>
-              <li><a href="#" class="text-gray-400 hover:text-white">Shipping</a></li>
+            <h3 class="font-semibold text-white mb-4">Support</h3>
+            <ul class="space-y-2.5 text-sm">
+              <li><a href="#" class="text-slate-400 transition hover:text-white">Contact Us</a></li>
+              <li><a href="#" class="text-slate-400 transition hover:text-white">FAQ</a></li>
+              <li><a href="#" class="text-slate-400 transition hover:text-white">Shipping</a></li>
             </ul>
           </div>
           <div>
-            <h3 class="font-bold text-lg mb-4">Contact</h3>
-            <p class="text-gray-400 text-sm">Email: info@trottinetteTN.com</p>
-            <p class="text-gray-400 text-sm">Phone: +216 XX XXX XXX</p>
+            <h3 class="font-semibold text-white mb-4">Contact</h3>
+            <p class="text-slate-400 text-sm">Email: info@trottinetteTN.com</p>
+            <p class="text-slate-400 text-sm">Phone: +216 XX XXX XXX</p>
           </div>
         </div>
-        <div class="border-t border-gray-700 pt-8 text-center text-gray-400 text-sm">
+        <div class="border-t border-slate-800 pt-8 text-center text-slate-500 text-sm">
           <p>&copy; 2024 Trottinette Tunisie. All rights reserved.</p>
         </div>
       </div>
