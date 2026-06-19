@@ -58,6 +58,9 @@ export const ordersAPI = {
   createOrder: (shippingData) => api.post('/orders', shippingData),
   getOrders: () => api.get('/orders'),
   getOrderDetails: (orderId) => api.get(`/orders/${orderId}`),
+  updateOrderStatus: (orderId, status) => api.put(`/orders/${orderId}/status`, { status }),
+  getAdminOrders: () => api.get('/admin/orders'),
+  getAdminOrderDetails: (orderId) => api.get(`/admin/orders/${orderId}`),
 }
 
 // Reviews endpoints

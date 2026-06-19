@@ -120,7 +120,7 @@ app.post('/api/products', authMiddleware, async (req, res) => {
 
     const { rows } = await db.query(
       `INSERT INTO products (category_id, name, slug, description, price, stock, image_url, specs)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
       [category_id, name, slug, description, price, stock || 0, image_url || '', finalSpecs],
     )
 
@@ -148,8 +148,8 @@ app.put('/api/products/:id', authMiddleware, async (req, res) => {
 
     const { rows } = await db.query(
       `UPDATE products 
-       SET category_id = $1, name = $2, description = $3, price = $4, stock = $5, image_url = $6, specs = $7
-       WHERE id = $8 RETURNING *`,
+        SET category_id = $1, name = $2, description = $3, price = $4, stock = $5, image_url = $6, specs = $7
+        WHERE id = $8 RETURNING *`,
       [category_id, name, description, price, stock, image_url, finalSpecs, id],
     )
 
@@ -321,9 +321,9 @@ app.put('/api/users/profile', authMiddleware, async (req, res) => {
 
     const { rows } = await db.query(
       `UPDATE users 
-       SET first_name = $1, last_name = $2, phone = $3, address = $4, city = $5, postal_code = $6, country = $7
-       WHERE id = $8 
-       RETURNING id, email, first_name, last_name, phone, address, city, postal_code, country, is_admin`,
+        SET first_name = $1, last_name = $2, phone = $3, address = $4, city = $5, postal_code = $6, country = $7
+        WHERE id = $8 
+        RETURNING id, email, first_name, last_name, phone, address, city, postal_code, country, is_admin`,
       [first_name, last_name, phone, address, city, postal_code, country, req.userId],
     )
 
@@ -339,10 +339,10 @@ app.get('/api/cart', authMiddleware, async (req, res) => {
   try {
     const { rows } = await db.query(
       `SELECT c.*, p.name, p.price, p.image_url, p.slug 
-       FROM cart_items c 
-       JOIN products p ON c.product_id = p.id 
-       WHERE c.user_id = $1 
-       ORDER BY c.created_at DESC`,
+        FROM cart_items c 
+        JOIN products p ON c.product_id = p.id 
+        WHERE c.user_id = $1 
+        ORDER BY c.created_at DESC`,
       [req.userId],
     )
 
@@ -375,17 +375,18 @@ app.post('/api/cart', authMiddleware, async (req, res) => {
 
     // Add or update cart item
     const { rows } = await db.query(
-      `INSERT INTO cart_items (user_id, product_id, quantity) 
-       VALUES ($1, $2, $3) 
-       ON CONFLICT (user_id, product_id) DO UPDATE SET quantity = quantity + $3
-       RETURNING *`,
+      `INSERT INTO cart_items (user_id, product_id, quantity)
+   VALUES ($1, $2, $3)
+   ON CONFLICT (user_id, product_id)
+   DO UPDATE SET quantity = cart_items.quantity + EXCLUDED.quantity
+   RETURNING *`,
       [req.userId, product_id, quantity],
     )
 
     res.status(201).json(rows[0])
   } catch (err) {
     console.error(err)
-    res.status(500).json({ error: 'Failed to add item to cart' })
+    res.status(500).json({ error: err })
   }
 })
 
@@ -483,8 +484,8 @@ app.post('/api/orders', authMiddleware, async (req, res) => {
     // Create order
     const { rows: orderRows } = await db.query(
       `INSERT INTO orders (user_id, total_price, payment_method, shipping_address, shipping_city, shipping_postal_code, shipping_country)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
-       RETURNING *`,
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        RETURNING *`,
       [
         req.userId,
         totalPrice,
@@ -502,7 +503,7 @@ app.post('/api/orders', authMiddleware, async (req, res) => {
     for (const item of cartItems) {
       await db.query(
         `INSERT INTO order_items (order_id, product_id, quantity, price)
-         VALUES ($1, $2, $3, (SELECT price FROM products WHERE id = $2))`,
+          VALUES ($1, $2, $3, (SELECT price FROM products WHERE id = $2))`,
         [order.id, item.product_id, item.quantity],
       )
 
@@ -554,8 +555,8 @@ app.get('/api/orders/:orderId', authMiddleware, async (req, res) => {
 
     const { rows: items } = await db.query(
       `SELECT oi.*, p.name, p.slug, p.image_url FROM order_items oi 
-       JOIN products p ON oi.product_id = p.id 
-       WHERE oi.order_id = $1`,
+        JOIN products p ON oi.product_id = p.id 
+        WHERE oi.order_id = $1`,
       [order.id],
     )
 
@@ -567,7 +568,108 @@ app.get('/api/orders/:orderId', authMiddleware, async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch order' })
   }
 })
+// ============== ADMIN ORDERS ==============
+app.get('/api/admin/orders', authMiddleware, async (req, res) => {
+  try {
+    // Check if user is admin
+    const { rows: userRows } = await db.query('SELECT is_admin FROM users WHERE id = $1', [
+      req.userId,
+    ])
+    if (!userRows[0]?.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' })
+    }
 
+    const query = `
+      SELECT o.*,
+             u.first_name, u.last_name, u.email, u.phone,
+             (SELECT COUNT(*) FROM order_items WHERE order_id = o.id) AS items_count
+      FROM orders o
+      JOIN users u ON o.user_id = u.id
+      ORDER BY o.created_at DESC
+    `
+    const { rows } = await db.query(query)
+    res.json(rows)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to fetch admin orders' })
+  }
+})
+// ============== ADMIN ORDER DETAILS ==============
+app.get('/api/admin/orders/:orderId', authMiddleware, async (req, res) => {
+  try {
+    const { orderId } = req.params
+
+    // Check admin
+    const { rows: userRows } = await db.query('SELECT is_admin FROM users WHERE id = $1', [
+      req.userId,
+    ])
+    if (!userRows[0]?.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' })
+    }
+
+    // Get order with user details
+    const { rows: orderRows } = await db.query(
+      `SELECT o.*, u.first_name, u.last_name, u.email, u.phone
+       FROM orders o
+       JOIN users u ON o.user_id = u.id
+       WHERE o.id = $1`,
+      [orderId],
+    )
+    if (orderRows.length === 0) {
+      return res.status(404).json({ error: 'Order not found' })
+    }
+    const order = orderRows[0]
+
+    // Get order items
+    const { rows: items } = await db.query(
+      `SELECT oi.*, p.name, p.slug, p.image_url
+       FROM order_items oi
+       JOIN products p ON oi.product_id = p.id
+       WHERE oi.order_id = $1`,
+      [orderId],
+    )
+    order.items = items
+
+    res.json(order)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to fetch admin order details' })
+  }
+})
+// ============== UPDATE ORDER STATUS (Admin) ==============
+app.put('/api/orders/:orderId/status', authMiddleware, async (req, res) => {
+  try {
+    const { orderId } = req.params
+    const { status } = req.body
+
+    if (!status) {
+      return res.status(400).json({ error: 'Status is required' })
+    }
+
+    // Check if user is admin
+    const { rows: userRows } = await db.query('SELECT is_admin FROM users WHERE id = $1', [
+      req.userId,
+    ])
+    if (!userRows[0]?.is_admin) {
+      return res.status(403).json({ error: 'Admin access required' })
+    }
+
+    // Update order status
+    const { rows } = await db.query('UPDATE orders SET status = $1 WHERE id = $2 RETURNING *', [
+      status,
+      orderId,
+    ])
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Order not found' })
+    }
+
+    res.json(rows[0])
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to update order status' })
+  }
+})
 // ============== REVIEWS ==============
 app.post('/api/reviews', authMiddleware, async (req, res) => {
   try {
@@ -640,15 +742,15 @@ app.get('/api/search', async (req, res) => {
 
     const searchTerm = q.trim().toLowerCase() // 👈 force lowercase
     const query = `
-      SELECT p.*, c.name as category_name,
-             similarity(LOWER(p.name), $1) + similarity(LOWER(p.description), $1) AS score
-      FROM products p
-      JOIN categories c ON p.category_id = c.id
-      WHERE similarity(LOWER(p.name), $1) > 0.2 
-         OR similarity(LOWER(p.description), $1) > 0.2
-      ORDER BY score DESC, p.name ASC
-      LIMIT 50
-    `
+        SELECT p.*, c.name as category_name,
+              similarity(LOWER(p.name), $1) + similarity(LOWER(p.description), $1) AS score
+        FROM products p
+        JOIN categories c ON p.category_id = c.id
+        WHERE similarity(LOWER(p.name), $1) > 0.2 
+          OR similarity(LOWER(p.description), $1) > 0.2
+        ORDER BY score DESC, p.name ASC
+        LIMIT 50
+      `
     const { rows } = await db.query(query, [searchTerm])
     res.json(rows)
   } catch (err) {

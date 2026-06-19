@@ -394,6 +394,7 @@ const handleImageUpload = async (event) => {
     }
     reader.readAsDataURL(file)
   } catch (err) {
+    console.error(err)
     error.value = 'Failed to process image'
     uploading.value = false
   }

@@ -51,6 +51,20 @@
                   required
                 />
               </div>
+
+              <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-1.5"
+                  >Phone Number *</label
+                >
+                <input
+                  v-model="shippingData.phone"
+                  type="tel"
+                  class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  placeholder="+216 XX XXX XXX"
+                  required
+                />
+                <p v-if="phoneError" class="mt-1 text-xs text-red-600">{{ phoneError }}</p>
+              </div>
             </div>
           </div>
 
@@ -192,7 +206,10 @@ const shippingData = ref({
   shipping_postal_code: '',
   shipping_country: 'Tunisia',
   payment_method: 'cash_on_delivery',
+  phone: '',
 })
+
+const phoneError = ref('')
 
 onMounted(async () => {
   if (!authStore.isAuthenticated) {
@@ -204,18 +221,32 @@ onMounted(async () => {
       shippingData.value.shipping_city = profile.city || ''
       shippingData.value.shipping_postal_code = profile.postal_code || ''
       shippingData.value.shipping_country = profile.country || 'Tunisia'
+      shippingData.value.phone = profile.phone || ''
     }
   }
 })
 
+const isValidPhone = (phone) => {
+  // Accepts international format: +216XXXXXXXXX or 0XXXXXXXXX
+  const cleaned = phone.replace(/\s/g, '')
+  return /^(\+216|0)[0-9]{8}$/.test(cleaned)
+}
+
 const submitOrder = async () => {
+  phoneError.value = ''
+  error.value = ''
+
   if (!shippingData.value.shipping_address || !shippingData.value.shipping_city) {
     error.value = 'Please fill in all required fields'
     return
   }
 
+  if (!shippingData.value.phone || !isValidPhone(shippingData.value.phone)) {
+    phoneError.value = 'Please enter a valid phone number (e.g., +216 XX XXX XXX or 0XX XXX XXX)'
+    return
+  }
+
   isLoading.value = true
-  error.value = ''
 
   try {
     const order = await orderStore.createOrder(shippingData.value)

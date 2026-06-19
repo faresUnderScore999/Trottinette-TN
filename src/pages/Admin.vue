@@ -73,6 +73,19 @@
         </div>
       </router-link>
 
+      <router-link
+        to="/admin/orders"
+        class="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/40 transition hover:scale-[1.01]"
+      >
+        <div class="relative flex items-center justify-between">
+          <div>
+            <h3 class="text-xl font-bold text-slate-900">Orders Management</h3>
+            <p class="mt-1 text-sm text-slate-500">Track and manage customer orders</p>
+          </div>
+          <div class="text-4xl">📋</div>
+        </div>
+      </router-link>
+
       <div
         class="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/40 opacity-70"
       >
@@ -82,18 +95,6 @@
             <p class="mt-1 text-sm text-slate-500">Organize your products (coming soon)</p>
           </div>
           <div class="text-4xl">📂</div>
-        </div>
-      </div>
-
-      <div
-        class="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/40 opacity-70"
-      >
-        <div class="relative flex items-center justify-between">
-          <div>
-            <h3 class="text-xl font-bold text-slate-900">Orders Management</h3>
-            <p class="mt-1 text-sm text-slate-500">View and manage customer orders (coming soon)</p>
-          </div>
-          <div class="text-4xl">📋</div>
         </div>
       </div>
 
@@ -206,7 +207,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { productsAPI } from '../services/api'
+import { productsAPI, ordersAPI } from '../services/api'
 import { useAuthStore } from '../stores/ecommerce'
 
 const router = useRouter()
@@ -227,10 +228,15 @@ const formatDate = (date) => {
 
 const loadStats = async () => {
   try {
-    const productsRes = await productsAPI.getProducts()
+    const [productsRes, ordersRes] = await Promise.all([
+      productsAPI.getProducts(),
+      ordersAPI.getOrders(),
+    ])
     const products = productsRes.data
+    const orders = ordersRes.data
     recentProducts.value = products.slice(0, 5)
     stats.value.products = products.length
+    stats.value.orders = orders.length
     stats.value.lowStock = products.filter((p) => p.stock < 5).length
   } catch (err) {
     console.error('Failed to load stats:', err)
