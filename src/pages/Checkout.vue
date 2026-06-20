@@ -60,7 +60,7 @@
                   v-model="shippingData.phone"
                   type="tel"
                   class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                  placeholder="+216 XX XXX XXX"
+                  placeholder="e.g. 12345678"
                   required
                 />
                 <p v-if="phoneError" class="mt-1 text-xs text-red-600">{{ phoneError }}</p>
@@ -214,7 +214,10 @@ const phoneError = ref('')
 onMounted(async () => {
   if (!authStore.isAuthenticated) {
     router.push('/login')
-  } else {
+    return
+  }
+
+  try {
     const profile = await authStore.getProfile?.()
     if (profile) {
       shippingData.value.shipping_address = profile.address || ''
@@ -223,13 +226,15 @@ onMounted(async () => {
       shippingData.value.shipping_country = profile.country || 'Tunisia'
       shippingData.value.phone = profile.phone || ''
     }
+  } catch (err) {
+    // Silently ignore profile fetch error – user can still fill in manually
   }
 })
 
+// Accepts only numbers after removing all non‑digit characters
 const isValidPhone = (phone) => {
-  // Accepts international format: +216XXXXXXXXX or 0XXXXXXXXX
-  const cleaned = phone.replace(/\s/g, '')
-  return /^(\+216|0)[0-9]{8}$/.test(cleaned)
+  const cleaned = phone.replace(/[^0-9]/g, '')
+  return cleaned.length > 0
 }
 
 const submitOrder = async () => {
@@ -242,17 +247,33 @@ const submitOrder = async () => {
   }
 
   if (!shippingData.value.phone || !isValidPhone(shippingData.value.phone)) {
-    phoneError.value = 'Please enter a valid phone number (e.g., +216 XX XXX XXX or 0XX XXX XXX)'
+    phoneError.value = 'Please enter a valid phone number (digits only)'
     return
   }
 
   isLoading.value = true
 
   try {
+    // 1. Create the order
     await orderStore.createOrder(shippingData.value)
+
+    // 2. Update the user's profile with the shipping information
+    // Map shipping fields to profile fields
+    const profileUpdate = {
+      address: shippingData.value.shipping_address,
+      city: shippingData.value.shipping_city,
+      postal_code: shippingData.value.shipping_postal_code,
+      country: shippingData.value.shipping_country,
+      phone: shippingData.value.phone,
+    }
+    // We ignore errors here – the order is already placed,
+    // and profile update failure shouldn't block the user.
+    await authStore.updateProfile(profileUpdate).catch(() => {})
+
+    // 3. Clear cart and redirect
     cartStore.clearCart()
-    router.push(`/orders`)
-  } catch {
+    router.push('/orders')
+  } catch (err) {
     error.value = orderStore.error || 'Failed to place order'
   } finally {
     isLoading.value = false
