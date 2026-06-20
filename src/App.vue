@@ -43,6 +43,9 @@
         </div>
 
         <div class="flex items-center gap-1">
+          <!-- Language Selector -->
+          <div id="google_translate_element" class="hidden sm:block"></div>
+
           <!-- Contact Link -->
           <router-link
             to="/contact"
